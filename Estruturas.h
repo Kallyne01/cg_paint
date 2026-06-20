@@ -130,7 +130,7 @@ typedef struct {
 
 typedef struct {
     CenaGrafica cena;
-    EstadoInterface interface;
+    EstadoInterface ui;  // "interface" e palavra reservada no Windows (rpcdce.h)
 } ContextoPaint;
 
 // ============================================================================
@@ -141,9 +141,9 @@ typedef struct {
 void inicializarContexto(ContextoPaint *ctx);
 
 // --- Criacao de objetos ---
-void adicionarPonto(CenaGrafica *cena, float x, float y, float cor[3], float tamanho);
-void adicionarReta(CenaGrafica *cena, Ponto p1, Ponto p2, float cor[3], float espessura);
-void adicionarPoligono(CenaGrafica *cena, Ponto vertices[], int qtd_vertices,
+int adicionarPonto(CenaGrafica *cena, float x, float y, float cor[3], float tamanho);
+int adicionarReta(CenaGrafica *cena, Ponto p1, Ponto p2, float cor[3], float espessura);
+int adicionarPoligono(CenaGrafica *cena, Ponto vertices[], int qtd_vertices,
                        float cor_contorno[3], float cor_preenchimento[3],
                        int preenchido, float espessura_contorno);
 
@@ -175,8 +175,8 @@ void refletirObjeto(CenaGrafica *cena, EixoReflexao eixo);
 void cisalharObjeto(CenaGrafica *cena, float shx, float shy);
 
 // --- Salvar/Carregar arquivo ---
-void salvarCena(CenaGrafica *cena, const char *nomeArquivo);
-void carregarCena(CenaGrafica *cena, const char *nomeArquivo);
+int salvarCena(CenaGrafica *cena, const char *nomeArquivo);
+int carregarCena(CenaGrafica *cena, const char *nomeArquivo);
 
 // --- Utilidades geometricas ---
 Ponto calcularCentro(Ponto vertices[], int qtd);
