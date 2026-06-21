@@ -1,74 +1,84 @@
-# 🎨 Projeto Paint em OpenGL (Trabalho de CG)
+# 🎨 CG Paint em OpenGL
 
-Olá equipe! 👋
+Este é um projeto de Computação Gráfica que implementa uma aplicação estilo "Paint" totalmente construída em C utilizando a biblioteca OpenGL (FreeGLUT).
 
-Bem-vindos ao repositório do nosso projeto de Computação Gráfica. O objetivo deste trabalho é construir uma aplicação estilo "Paint" utilizando C/C++ e a biblioteca OpenGL. 
+## 🚀 Funcionalidades
 
-Esta documentação serve como ponto de partida para que todos entendam o que já foi modelado até agora e como vamos seguir com a implementação.
+O **CG Paint** suporta a criação, seleção, exclusão, transformação geométrica e animação de formas primitivas 2D. 
 
----
-
-## 🏗️ Arquitetura e Modelagem Atual
-
-Para garantir que o nosso código não vire uma bagunça conforme o projeto crescer, nós focamos inicialmente em definir muito bem a **arquitetura de dados** do projeto. 
-
-Toda a nossa modelagem foi feita no arquivo **`Estruturas.h`**. Ele é o coração do projeto e já cobre **100% dos requisitos** exigidos pelo professor. Abaixo, um resumo do que vocês vão encontrar nele:
-
-### 1. Objetos Geométricos e Desenho
-* **`Ponto`**: Estrutura base de coordenada (x, y).
-* **`Matriz3x3`**: Estrutura para implementarmos manualmente as nossas matrizes de transformações geométricas.
-* **`PontoDesenho`, `Reta`, `Poligono`**: Nossas estruturas visuais. Elas guardam as coordenadas e as propriedades visuais (cor, espessura, se estão **selecionadas** ou não).
-* **`CenaGrafica`**: A struct mestre que armazena *todos* os objetos desenhados na tela de forma organizada (vetores de pontos, retas e polígonos).
-
-### 2. Controle de Estado e Interface
-* **Modos de Ferramenta**: Enums para sabermos se o usuário está usando Lápis, Linha, Polígono, Seleção ou Borracha.
-* **`EstadoAnimacao`**: Estrutura preparada para lidar com os requisitos de animação.
-* **`EstadoInterface` e `ContextoPaint`**: Estruturas que guardam tudo que está acontecendo no momento (qual cor está selecionada, se o usuário está no meio do clique de uma reta, qual ferramenta está ativa, etc.).
+Principais recursos:
+- Desenho de pontos, retas e polígonos.
+- Ferramenta lápis para desenho livre.
+- Cores e espessuras ajustáveis.
+- Transformações geométricas implementadas manualmente utilizando matrizes homogêneas (Translação, Rotação, Escala, Reflexão e Cisalhamento).
+- Sistema de seleção e remoção de objetos ("Borracha").
+- Persistência: Salvamento e carregamento da cena em arquivo binário.
+- Animação simples de objetos na tela (movimentos lineares e orbitais).
 
 ---
 
-## ⚙️ Como rodar o projeto
+## ⚙️ Como Compilar e Executar
 
-Para compilar e executar o projeto, nós estamos utilizando o **Code::Blocks**.
+Existem duas formas principais de compilar o projeto no Windows:
 
-Siga o passo a passo:
+### Opção 1: Via Code::Blocks (Recomendado)
+O projeto já conta com o arquivo de configuração do Code::Blocks (`cg_paint.cbp`).
 1. Abra o Code::Blocks.
-2. Vá em `File > Open...` e selecione o arquivo **`cg_paint.cbp`** na raiz deste repositório.
-3. Com o projeto aberto, aperte a tecla **`F9`** (ou vá em `Build > Build and run` no menu superior).
-4. O Code::Blocks irá compilar todos os arquivos `.c` e abrirá a janela gráfica do OpenGL!
+2. Acesse `File > Open...` e selecione o arquivo **`cg_paint.cbp`**.
+3. Pressione a tecla **`F9`** (ou acesse `Build > Build and run`). O ambiente cuidará de compilar e abrir a janela do OpenGL.
+
+### Opção 2: Via Terminal (GCC)
+Se você possui o GCC configurado com as bibliotecas do FreeGLUT e OpenGL instaladas (`-lfreeglut`, `-lopengl32`, `-lglu32`), abra o terminal na pasta raiz do projeto e execute:
+
+```bash
+gcc main.c primitivas.c saveLoad.c Selecao.c animacao.c tranformacoes.c -o bin/Debug/cg_paint.exe -lfreeglut -lopengl32 -lglu32
+```
+Em seguida, basta rodar o executável gerado:
+```bash
+./bin/Debug/cg_paint.exe
+```
 
 ---
 
-## 🚀 Próximos Passos: Onde a equipe deve focar?
+## 🎮 Manual de Uso e Atalhos (Teclado)
 
-Tendo o esqueleto pronto (`Estruturas.h`), nosso trabalho agora é "dar vida" aos protótipos listados no final deste arquivo. 
+Após abrir o programa, utilize o mouse e os seguintes atalhos no teclado para interagir com a aplicação:
 
-Podemos dividir as tarefas entre a equipe nas seguintes frentes (criando os arquivos `.c` correspondentes):
+### Ferramentas de Desenho
+* **`1`** : Ponto (Clique para desenhar)
+* **`2`** : Reta (Clique 2 vezes: P1 e P2)
+* **`3`** : Polígono (Botão Esquerdo para adicionar vértices, Botão Direito para finalizar)
+* **`4`** : Seleção (Clique próximo aos objetos para selecioná-los)
+* **`5`** : Borracha (Clique no objeto para excluí-lo)
+* **`6`** : Lápis (Segure e arraste para desenhar livremente)
 
-1. **`Main.c` (Loop e Eventos):**
-   * Configurar a janela OpenGL (`glutInit`, `glutDisplayFunc`, etc).
-   * Capturar os eventos de mouse (`glutMouseFunc`, `glutMotionFunc`) e repassar para a nossa `Interface`.
-   * Capturar eventos de teclado para trocar as ferramentas.
+### Controles Gerais
+* **`C`** : Trocar cor (cicla pelas cores da paleta)
+* **`+` / `-`** : Aumentar ou diminuir a espessura da linha / tamanho do ponto
+* **`L`** : Limpar a tela inteira
+* **`F1`** : Salvar cena atual (salva em `cena_salva.bin`)
+* **`F2`** : Carregar cena salva
+* **`ESC`** : Sair do programa
 
-2. **`Desenho.c` (Renderização):**
-   * Implementar a função `desenharCena(...)` percorrendo a `CenaGrafica` e usando as primitivas do OpenGL (`GL_POINTS`, `GL_LINES`, `GL_POLYGON`) para pintar nossos objetos na tela.
+### Transformações Geométricas (Aplicadas a objetos selecionados)
+* **Translação**: `T` (Direita), `G` (Esquerda), `U` (Cima), `J` (Baixo)
+* **Rotação**: `R` (+15 graus), `F` (-15 graus)
+* **Escala**: `E` (Aumentar +20%), `N` (Diminuir -20%)
+* **Reflexão**: `X` (Eixo X), `Y` (Eixo Y), `O` (Na Origem)
+* **Cisalhamento**: `H` (+X), `K` (-X)
 
-3. **`Interacao.c` (Lógica de Criação/Seleção):**
-   * Implementar a lógica de adicionar novos pontos, retas e polígonos.
-   * Criar os algoritmos de seleção (clicou perto do objeto, ele fica `selecionado = 1`).
-   * Lógica de exclusão (apagar os selecionados).
-
-4. **`Transformacoes.c` (Geometria):**
-   * Implementar as operações matemáticas nas funções `transladarObjeto`, `rotacionarObjeto`, `escalarObjeto`, `refletirObjeto` e `cisalharObjeto`. Aqui nós vamos multiplicar nossos vértices pela `Matriz3x3`.
-
-5. **`Arquivos.c` e `Animacao.c`:**
-   * Lógica simples para ler/escrever nossa struct `CenaGrafica` em um arquivo binário (`fread`/`fwrite`).
-   * Lógica da função `glutTimerFunc` para animar os objetos.
+### Animação (Aplicada a objetos selecionados)
+* **`P`** : Ativar / Pausar animação
+* **Movimento Linear**: `W` (Cima), `S` (Baixo), `A` (Esquerda), `D` (Direita)
+* **Movimento Orbital**: `M` (Circular)
 
 ---
 
-## 🤝 Dicas para o Desenvolvimento
-
-* **Leiam o `Estruturas.h`!** Antes de codificar, dêem uma olhada no arquivo para entenderem os nomes das variáveis e as estruturas disponíveis.
-* <span style="color:red">**Mantenham as coisas modulares:** Evitem fazer tudo no `main.c`. Vamos colocar a lógica de desenho junto com o desenho, a de matemática junto com a matemática.</span>
-* Qualquer dúvida sobre a arquitetura ou como acessar um dado, é só mandar mensagem no grupo!
+## 🏗️ Estrutura do Código
+* `Estruturas.h`: Define as structs core do projeto (`Ponto`, `Reta`, `Poligono`, `CenaGrafica`, matrizes, etc).
+* `main.c`: Configuração do OpenGL, Loop principal, tratamento de teclado e mouse.
+* `primitivas.c`: Lógica matemática de adição das primitivas na cena.
+* `Selecao.c`: Algoritmos de seleção (Cohen-Sutherland para retas e colisões para polígonos/pontos) e remoção.
+* `tranformacoes.c`: Implementação matricial das transformações geométricas 2D.
+* `animacao.c`: Controle de frame a frame para mover objetos.
+* `saveLoad.c`: Leitura e escrita binária para manter persistência.
