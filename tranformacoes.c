@@ -100,7 +100,7 @@ static Ponto centroReta(Reta *r){
     Ponto c;
 
     c.x = (r->p1.x + r->p1.x)/ 2.0f;
-    c.y = (r->p2.x + r->p2.y)/ 2.0f;
+    c.y = (r->p2.y + r->p2.y)/ 2.0f;
 
     return c;
 }
