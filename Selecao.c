@@ -4,13 +4,7 @@
 
 #define TOLERANCIA 10.0f
 
-static int obterLarguraJanela(void) {
-    return glutGet(GLUT_WINDOW_WIDTH);
-}
 
-static int obterAlturaJanela(void) {
-    return glutGet(GLUT_WINDOW_HEIGHT);
-}
 
 void desenharCena(CenaGrafica *cena){
     for( int i = 0; i < cena -> qtd_pontos; i++){
@@ -80,49 +74,77 @@ void desenharCena(CenaGrafica *cena){
 
 
 Ponto windowParaGL(int mx, int my){
-    int larguraJanela = obterLarguraJanela();
-    int alturaJanela = obterAlturaJanela();
     Ponto v;
-    v.x = (2.0f * mx / larguraJanela) - 1.0f;
-    v.y = 1.0f - (2.0f * my / alturaJanela);
+    v.x = (float)mx;
+    v.y = (float)my;
     return v;
 }
 
 
-float distanciaPixels(Ponto a, Ponto b){
-    int larguraJanela = obterLarguraJanela();
-    int alturaJanela = obterAlturaJanela();
-    float dx = (a.x - b.x) * larguraJanela / 2.0f;
-    float dy = (a.y - b.y) * alturaJanela / 2.0f;
-    return sqrtf(dx * dx + dy * dy);
+#define CS_ESQUERDA 1 // 0001
+#define CS_DIREITA  2 // 0010
+#define CS_ABAIXO   4 // 0100
+#define CS_ACIMA    8 // 1000
+
+int calcularCodigoCS(float x, float y, float mx, float my, float tol) {
+    int codigo = 0;
+    if (x < mx - tol)      codigo |= CS_ESQUERDA;
+    else if (x > mx + tol) codigo |= CS_DIREITA;
+    
+    if (y < my - tol)      codigo |= CS_ABAIXO;
+    else if (y > my + tol) codigo |= CS_ACIMA;
+    return codigo;
 }
 
-float distPontosSegmentos(Ponto p, Ponto a, Ponto b){
-    int larguraJanela = obterLarguraJanela();
-    int alturaJanela = obterAlturaJanela();
-    float ax = (a.x + 1.0f) * larguraJanela / 2.0f;
-    float ay = (1.0f - a.y) * alturaJanela / 2.0f;
-    float bx = (b.x + 1.0f) * larguraJanela / 2.0f;
-    float by = (1.0f - b.y) * alturaJanela / 2.0f;
-    float px = (p.x + 1.0f) * larguraJanela / 2.0f;
-    float py = (1.0f - p.y) * alturaJanela / 2.0f;
+int cohenSutherlandIntercepta(Ponto p1, Ponto p2, Ponto clique, float tol) {
+    float mx = clique.x;
+    float my = clique.y;
+    float x1 = p1.x, y1 = p1.y;
+    float x2 = p2.x, y2 = p2.y;
+    
+    int code1 = calcularCodigoCS(x1, y1, mx, my, tol);
+    int code2 = calcularCodigoCS(x2, y2, mx, my, tol);
+    int aceito = 0;
 
-    float dx = bx - ax;
-    float dy = by - ay;
-    float len2 = dx * dx + dy * dy;
+    while (1) {
+        if ((code1 == 0) && (code2 == 0)) {
+            // Caso trivial: aceita (linha intercepta a caixa)
+            aceito = 1;
+            break;
+        } else if (code1 & code2) {
+            // Caso trivial: rejeita (linha totalmente fora da caixa)
+            break;
+        } else {
+            // Caso nao trivial: calcular intersecao
+            int code_fora = code1 ? code1 : code2;
+            float x = 0, y = 0;
 
-    if(len2 == 0.0f){
-       return sqrtf((px - ax) * (px - ax) + (py - ay) * (py - ay));
+            if (code_fora & CS_ACIMA) {
+                x = x1 + (x2 - x1) * ((my + tol) - y1) / (y2 - y1);
+                y = my + tol;
+            } else if (code_fora & CS_ABAIXO) {
+                x = x1 + (x2 - x1) * ((my - tol) - y1) / (y2 - y1);
+                y = my - tol;
+            } else if (code_fora & CS_DIREITA) {
+                y = y1 + (y2 - y1) * ((mx + tol) - x1) / (x2 - x1);
+                x = mx + tol;
+            } else if (code_fora & CS_ESQUERDA) {
+                y = y1 + (y2 - y1) * ((mx - tol) - x1) / (x2 - x1);
+                x = mx - tol;
+            }
+
+            if (code_fora == code1) {
+                x1 = x;
+                y1 = y;
+                code1 = calcularCodigoCS(x1, y1, mx, my, tol);
+            } else {
+                x2 = x;
+                y2 = y;
+                code2 = calcularCodigoCS(x2, y2, mx, my, tol);
+            }
+        }
     }
-
-    float t =((px - ax) * dx + (py - ay) *dy) / len2;
-    if(t < 0.0f) t = 0.0f;
-    if( t > 1.0f) t = 1.0f;
-
-    float projx = ax + t * dx;
-    float projy = ay + t * dy;
-
-    return sqrtf((px - projx) * (px - projx) + (py - projy) * (py - projy));
+    return aceito;
 }
 
 int pontoNoPoligono(Ponto p, Ponto *vertices, int n){
@@ -142,18 +164,23 @@ int pontoNoPoligono(Ponto p, Ponto *vertices, int n){
 }
 
 int clicouNoPonto(PontoDesenho *ponto, Ponto clique){
-    return distanciaPixels(clique, ponto -> posicao) <= TOLERANCIA;
+    if (clique.x <= ponto->posicao.x + TOLERANCIA && clique.x >= ponto->posicao.x - TOLERANCIA) {
+        if (clique.y <= ponto->posicao.y + TOLERANCIA && clique.y >= ponto->posicao.y - TOLERANCIA) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int clicouNaReta(Reta *reta, Ponto clique){
-    return distPontosSegmentos(clique, reta -> p1, reta -> p2) <= TOLERANCIA;
+    return cohenSutherlandIntercepta(reta->p1, reta->p2, clique, TOLERANCIA);
 }
 
 
 int clicouNoPoligono(Poligono *poligono, Ponto clique){
     for( int i = 0; i < poligono -> qtd_vertices; i++){
         int j = ( i + 1) % poligono -> qtd_vertices;
-        if(distPontosSegmentos(clique, poligono -> vertices[i], poligono -> vertices[j]) <= TOLERANCIA){
+        if(cohenSutherlandIntercepta(poligono->vertices[i], poligono->vertices[j], clique, TOLERANCIA)){
             return 1;
         }
     }
