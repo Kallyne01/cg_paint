@@ -34,6 +34,7 @@ void atualizarPassoAnimacao(ContextoPaint *ctx) {
     // ANIMANDO PONTOS
     // =========================================================================
     for (int i = 0; i < ctx->cena.qtd_pontos; i++) {
+        if (!ctx->cena.pontos[i].selecionado) continue;
         ctx->cena.pontos[i].posicao.x += dx;
         ctx->cena.pontos[i].posicao.y += dy;
         if (ctx->cena.pontos[i].posicao.x > 800.0f) ctx->cena.pontos[i].posicao.x = 0.0f;
@@ -46,6 +47,7 @@ void atualizarPassoAnimacao(ContextoPaint *ctx) {
     // ANIMANDO RETAS
     // =========================================================================
     for (int i = 0; i < ctx->cena.qtd_retas; i++) {
+        if (!ctx->cena.retas[i].selecionado) continue;
         ctx->cena.retas[i].p1.x += dx;
         ctx->cena.retas[i].p1.y += dy;
         ctx->cena.retas[i].p2.x += dx;
@@ -73,6 +75,7 @@ void atualizarPassoAnimacao(ContextoPaint *ctx) {
     // =========================================================================
     for (int i = 0; i < ctx->cena.qtd_poligonos; i++) {
         if (ctx->cena.poligonos[i].qtd_vertices == 0) continue;
+        if (!ctx->cena.poligonos[i].selecionado) continue;
 
         // Move todos os vertices juntos usando o deslocamento calculado
         for (int j = 0; j < ctx->cena.poligonos[i].qtd_vertices; j++) {
